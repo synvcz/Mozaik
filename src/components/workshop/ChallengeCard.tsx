@@ -1,7 +1,8 @@
 import { ArrowRight } from 'lucide-react'
+import { startTemplate } from '../../lib/editorActions'
 import type { Challenge } from '../../types/challenge'
+import ActionButton from '../common/ActionButton'
 import DifficultyBadge from '../common/DifficultyBadge'
-import LinkButton from '../common/LinkButton'
 import FlowerIllustration from './FlowerIllustration'
 
 export default function ChallengeCard({ challenge }: { challenge: Challenge }) {
@@ -21,14 +22,17 @@ export default function ChallengeCard({ challenge }: { challenge: Challenge }) {
         <div className="mt-4">
           <DifficultyBadge difficulty={challenge.difficulty} />
         </div>
-        <LinkButton to="challenges" variant="secondary" className="mt-4 w-full justify-center">
+        <ActionButton
+          className="mt-4 w-full"
+          onClick={() => startTemplate(challenge.id)}
+        >
           Start challenge
           <ArrowRight
             size={16}
             aria-hidden="true"
             className="transition-transform duration-300 group-hover:translate-x-1"
           />
-        </LinkButton>
+        </ActionButton>
       </div>
     </article>
   )

@@ -1,5 +1,6 @@
 import { useEffect, type ReactNode } from 'react'
 import { useNavigationStore } from '../../store/navigationStore'
+import ToastHost from '../common/ToastHost'
 import Footer from './Footer'
 import NavBar from './NavBar'
 
@@ -7,7 +8,6 @@ export default function AppShell({ children }: { children: ReactNode }) {
   const route = useNavigationStore((s) => s.route)
   const syncFromHash = useNavigationStore((s) => s.syncFromHash)
 
-  // Keep the store in sync with the browser's back/forward buttons and typed URLs.
   useEffect(() => {
     window.addEventListener('hashchange', syncFromHash)
     return () => window.removeEventListener('hashchange', syncFromHash)
@@ -34,6 +34,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
         {children}
       </main>
       <Footer />
+      <ToastHost />
     </div>
   )
 }

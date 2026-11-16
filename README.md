@@ -1,75 +1,104 @@
-# React + TypeScript + Vite
+<div align="center">
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+#   Mozaik Kain Perca
 
-Currently, two official plugins are available:
+**Piece together Indonesian flowers and icons from patterned fabric scraps.**
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+An interactive fabric-collage workshop inspired by batik, kawung, parang and the flowers of Indonesia.
 
-## React Compiler
+![React](https://img.shields.io/badge/React-19-315C48?logo=react&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-5-315C48?logo=typescript&logoColor=white)
+![Vite](https://img.shields.io/badge/Vite-8-C77D55?logo=vite&logoColor=white)
+![Tailwind](https://img.shields.io/badge/Tailwind-v4-A7B69A?logo=tailwindcss&logoColor=white)
+![Konva](https://img.shields.io/badge/React_Konva-canvas-C77D55)
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+</div>
 
-## Expanding the ESLint configuration
+---
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+##  What is it?
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+*Kain perca* means "fabric scraps" and *mozaik* means "mosaic". In **Mozaik Kain Perca** you arrange colorful
+pieces of patterned fabric on a canvas to build your own artwork: a moon orchid, a Rafflesia, a tumpeng, or
+something completely original. No needle, no thread, no account.
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+##  Features
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+| | |
+|---|---|
+| **Workshop** | Animated home page with featured challenges and your recent creations |
+| **Create** | A real canvas editor: add, drag, resize, rotate, layer, undo/redo, duplicate, delete |
+| **Fabrics** | Batik, Kawung, Parang, Floral, Polka dots and Plain, in 12 colors |
+| **Shapes** | Square, circle, petal, leaf, triangle and diamond |
+| **Outline templates** | Dashed guides for 5 flowers and 4 Indonesian icons |
+| **Challenges** | Anggrek Bulan, Rafflesia Arnoldii, Bunga Melati, Bunga Sepatu, Bunga Kenanga |
+| **Galeri** | Community gallery: like, sort (newest / most popular), filter by category, publish |
+| **My Collection** | Everything you saved this session: preview, continue editing, publish, delete |
 
+### Outline templates
+
+🌸 Anggrek Bulan · 🌺 Rafflesia Arnoldii · 🤍 Bunga Melati · 🌺 Bunga Sepatu · 🌼 Bunga Kenanga
+🎭 Gunungan (wayang) · 🏠 Rumah Gadang · 🛕 Candi Borobudur · 🍚 Tumpeng
+
+##  Getting started
+
+```bash
+git clone <your-repo-url>
+cd Mozaik
+npm install
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://npmx.dev/package/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://npmx.dev/package/eslint-plugin-react-dom) for React-specific lint rules:
+Then open the URL Vite prints (usually http://localhost:5173).
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-
+```bash
+npm run build     # type-check and production build
+npm run lint      # ESLint
+npm run preview   # serve the production build
 ```
+
+##  How to use
+
+1. Open **Create** (or start a **Challenge** to get an outline).
+2. Choose a **shape**, a **color** and a **fabric**, then click the fabric to add it. On desktop you can drag it onto the canvas.
+3. Drag, resize and rotate pieces. Use **Layers** to reorder them.
+4. **Save** to My Collection, then **Publish** to Galeri when you are happy.
+
+**Shortcuts:** `Ctrl/Cmd + Z` undo · `Ctrl/Cmd + Shift + Z` or `Ctrl + Y` redo · `Delete` remove the selected piece.
+
+##  Tech stack
+
+- **React + TypeScript + Vite**
+- **Tailwind CSS v4** with a custom warm palette
+- **React Konva** for the interactive canvas
+- **Zustand** for state (editor, collection, gallery, toasts, navigation)
+- **Lucide React** icons
+- Hash-based navigation, so no router dependency
+
+##  Project structure
+
+```text
+src/
+├── components/   common · layout · editor · artwork · gallery · challenges · workshop
+├── features/     page-level screens (workshop, editor, challenges, gallery, collection)
+├── store/        zustand stores
+├── data/         challenges, outline templates, seed gallery
+├── lib/          shapes, fabric patterns, editor actions
+└── types/
+```
+
+##  Notes
+
+- There is **no backend**. All data lives in memory and resets when you refresh the page.
+- Fabric patterns are generated in code, so there are no image assets to load.
+- Flower illustrations and outlines are simplified, hand-drawn SVGs meant for inspiration, not botanical accuracy.
+
+##  Palette
+
+| Ivory | Forest | Sage | Terracotta |
+|---|---|---|---|
+| `#F8F6F0` | `#315C48` | `#A7B69A` | `#C77D55` |
+
+---
+
+<div align="center">Made with scraps of imagination </div>
