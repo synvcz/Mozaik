@@ -1,5 +1,5 @@
-
 import { create } from "zustand";
+import { createId } from "../lib/id";
 import type { Artwork, FabricPattern, FabricPiece } from "../types/editor";
 
 interface EditorStore {
@@ -16,8 +16,8 @@ interface EditorStore {
 
 export const useEditorStore = create<EditorStore>((set) => ({
   artwork: {
-    name: "Karya Tanpa Judul",
-    author: "Anonim",
+    name: "Untitled Artwork",
+    author: "Anonymous",
     pieces: [],
   },
 
@@ -30,7 +30,7 @@ export const useEditorStore = create<EditorStore>((set) => ({
         pieces: [
           ...state.artwork.pieces,
           {
-            id: crypto.randomUUID(),
+            id: createId(),
             pattern,
             color,
             x: 150,
