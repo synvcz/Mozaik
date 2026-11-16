@@ -1,5 +1,5 @@
 import { useEffect, type ReactNode } from 'react'
-import { useNavigationStore } from '../../store/navigationStore'
+import { ROUTES, useNavigationStore } from '../../store/navigationStore'
 import ToastHost from '../common/ToastHost'
 import Footer from './Footer'
 import NavBar from './NavBar'
@@ -15,6 +15,9 @@ export default function AppShell({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     window.scrollTo({ top: 0 })
+    const label = ROUTES.find((r) => r.id === route)?.label
+    document.title =
+      route === 'workshop' || !label ? 'Mozaik Kain Perca' : `${label} · Mozaik Kain Perca`
   }, [route])
 
   return (

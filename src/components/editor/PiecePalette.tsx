@@ -56,12 +56,16 @@ export default function PiecePalette() {
       </div>
 
       <p className="mb-1 mt-5 text-xs font-bold uppercase tracking-[0.15em] text-ink-soft">3 · Fabric</p>
-      <p className="mb-2 text-xs text-ink-soft">Click or tap to add. On desktop you can also drag onto the canvas.</p>
+      <p className="mb-2 text-xs text-ink-soft">
+        Click or tap to add. On desktop you can also drag onto the canvas.
+      </p>
       <div className="grid grid-cols-3 gap-1.5">
         {PATTERNS.map((p) => (
-          <button
+          // A div (not a button): Firefox does not start drags from <button draggable>.
+          <div
             key={p.id}
-            type="button"
+            role="button"
+            tabIndex={0}
             draggable
             aria-label={`Add ${p.label} fabric`}
             onDragStart={(e) => {
@@ -69,7 +73,13 @@ export default function PiecePalette() {
               e.dataTransfer.effectAllowed = 'copy'
             }}
             onClick={() => addPiece(p.id)}
-            className="group flex flex-col items-center gap-1.5 rounded-2xl p-1.5 text-xs font-semibold text-ink-soft transition hover:bg-sage/20"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault()
+                addPiece(p.id)
+              }
+            }}
+            className="group flex cursor-grab select-none flex-col items-center gap-1.5 rounded-2xl p-1.5 text-xs font-semibold text-ink-soft transition hover:bg-sage/20 active:cursor-grabbing"
           >
             <PatternSwatch
               pattern={p.id}
@@ -77,7 +87,7 @@ export default function PiecePalette() {
               className="h-16 w-full rounded-xl border border-forest/15 transition group-hover:scale-105"
             />
             {p.label}
-          </button>
+          </div>
         ))}
       </div>
     </Panel>
