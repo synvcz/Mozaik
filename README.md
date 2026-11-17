@@ -58,7 +58,17 @@ npm run lint      # ESLint
 npm run preview   # serve the production build
 ```
 
+## 🗄 Database setup (Supabase)
 
+Galeri stores published artwork in a free Supabase project.
+
+1. Create a project at https://supabase.com
+2. In **SQL Editor**, paste and run `supabase/schema.sql`
+3. In **Project Settings → API**, copy the Project URL and the anon (publishable) key
+4. Copy `.env.example` to `.env.local` and fill in both values
+5. Restart `npm run dev`
+
+If the keys are missing, the app still runs, and Galeri shows a setup notice.
 
 ##  How to use
 
