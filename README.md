@@ -32,18 +32,19 @@ something completely original. No needle, no thread, no account.
 | **Shapes** | Square, circle, petal, leaf, triangle and diamond |
 | **Outline templates** | Dashed guides for 5 flowers and 4 Indonesian icons |
 | **Challenges** | Anggrek Bulan, Rafflesia Arnoldii, Bunga Melati, Bunga Sepatu, Bunga Kenanga |
-| **Galeri** | Community gallery: like, sort (newest / most popular), filter by category, publish |
+| **Galeri** | Public community gallery stored in a database: like, sort, filter by category, publish |
 | **My Collection** | Everything you saved this session: preview, continue editing, publish, delete |
+| **Download** | Export your artwork as a high-resolution PNG |
 
 ### Outline templates
 
-🌸 Anggrek Bulan · 🌺 Rafflesia Arnoldii · 🤍 Bunga Melati · 🌺 Bunga Sepatu · 🌼 Bunga Kenanga
-🎭 Gunungan (wayang) · 🏠 Rumah Gadang · 🛕 Candi Borobudur · 🍚 Tumpeng
+Anggrek Bulan · Rafflesia Arnoldii · Bunga Melati · Bunga Sepatu · Bunga Kenanga
+Gunungan (wayang) · Rumah Gadang · Candi Borobudur · Tumpeng
 
 ##  Getting started
 
 ```bash
-git clone <your-repo-url>
+git clone https://github.com/synvcz/Mozaik.git
 cd Mozaik
 npm install
 npm run dev
@@ -56,6 +57,8 @@ npm run build     # type-check and production build
 npm run lint      # ESLint
 npm run preview   # serve the production build
 ```
+
+
 
 ##  How to use
 
@@ -73,6 +76,7 @@ npm run preview   # serve the production build
 - **React Konva** for the interactive canvas
 - **Zustand** for state (editor, collection, gallery, toasts, navigation)
 - **Lucide React** icons
+- **Supabase (Postgres)** for the public Galeri, accessed anonymously with row-level security
 - Hash-based navigation, so no router dependency
 
 ##  Project structure
@@ -89,7 +93,7 @@ src/
 
 ##  Notes
 
-- There is **no backend**. All data lives in memory and resets when you refresh the page.
+- Galeri artwork lives in Supabase. My Collection, the editor canvas and undo history are session-only and reset on refresh. Likes are remembered per browser.
 - Fabric patterns are generated in code, so there are no image assets to load.
 - Flower illustrations and outlines are simplified, hand-drawn SVGs meant for inspiration, not botanical accuracy.
 
