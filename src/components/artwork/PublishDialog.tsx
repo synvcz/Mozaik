@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { Upload } from 'lucide-react'
+import { isSupabaseConfigured } from '../../lib/supabase'
 import { useGalleryStore } from '../../store/galleryStore'
 import { useNavigationStore } from '../../store/navigationStore'
 import { useUiStore } from '../../store/uiStore'
@@ -35,9 +36,12 @@ export default function PublishDialog({
   const [author, setAuthor] = useState(draft.author)
   const [description, setDescription] = useState('')
   const [errors, setErrors] = useState<Errors>({})
+  const [submitting, setSubmitting] = useState(false)
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
+    if (submitting) return
+
     const t = title.trim()
     const a = author.trim()
     const next: Errors = {}
@@ -47,26 +51,42 @@ export default function PublishDialog({
       setErrors(next)
       return
     }
-    publish({
-      title: t,
-      author: a,
-      description: description.trim(),
-      pieces: draft.pieces,
-      templateId: draft.templateId,
-    })
-    useUiStore.getState().pushToast(`“${t}” is now live in Galeri.`, 'success')
-    onClose()
-    useNavigationStore.getState().navigate('galeri')
+
+    setSubmitting(true)
+    try {
+      await publish({
+        title: t,
+        author: a,
+        description: description.trim(),
+        pieces: draft.pieces,
+        templateId: draft.templateId,
+      })
+      useUiStore.getState().pushToast(`“${t}” is now live in Galeri.`, 'success')
+      onClose()
+      useNavigationStore.getState().navigate('galeri')
+    } catch (err) {
+      useUiStore
+        .getState()
+        .pushToast(err instanceof Error ? err.message : 'Publishing failed. Please try again.', 'error')
+      setSubmitting(false)
+    }
   }
 
   return (
     <Modal title="Publish to Galeri" onClose={onClose} size="md">
       <form onSubmit={handleSubmit} noValidate className="grid gap-5 sm:grid-cols-[180px_1fr]">
-        <div className="overflow-hidden rounded-2xl border border-forest/10 bg-white self-start">
+        <div className="self-start overflow-hidden rounded-2xl border border-forest/10 bg-white">
           <ArtworkThumbnail pieces={draft.pieces} />
         </div>
 
         <div className="space-y-4">
+          {!isSupabaseConfigured && (
+            <p className="rounded-2xl bg-terracotta/10 p-3 text-sm text-terracotta-deep">
+              Galeri is not connected to its database yet, so publishing will not work. See the
+              README to set it up.
+            </p>
+          )}
+
           <div>
             <label htmlFor="pub-title" className="text-sm font-semibold text-forest">
               Artwork title <span className="text-terracotta">*</span>
@@ -122,10 +142,12 @@ export default function PublishDialog({
           </div>
 
           <div className="flex justify-end gap-3 pt-1">
-            <ActionButton onClick={onClose}>Cancel</ActionButton>
-            <ActionButton type="submit" variant="primary">
+            <ActionButton onClick={onClose} disabled={submitting}>
+              Cancel
+            </ActionButton>
+            <ActionButton type="submit" variant="primary" disabled={submitting}>
               <Upload size={16} aria-hidden="true" />
-              Publish
+              {submitting ? 'Publishing…' : 'Publish'}
             </ActionButton>
           </div>
         </div>
