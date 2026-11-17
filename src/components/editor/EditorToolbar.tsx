@@ -1,6 +1,7 @@
 import {
   ArrowLeft,
   Copy,
+  Download,
   Eraser,
   Eye,
   Redo2,
@@ -11,6 +12,7 @@ import {
   type LucideIcon,
 } from 'lucide-react'
 import { saveDraftToCollection } from '../../lib/editorActions'
+import { downloadArtworkPng } from '../../lib/exportPng'
 import { useEditorStore } from '../../store/editorStore'
 import { hrefFor } from '../../store/navigationStore'
 import { useUiStore } from '../../store/uiStore'
@@ -78,6 +80,20 @@ export default function EditorToolbar({ onPreview, onPublish, onClear }: EditorT
     useUiStore.getState().pushToast('Saved to My Collection.', 'success')
   }
 
+  const handleDownload = async () => {
+    const s = useEditorStore.getState()
+    if (s.pieces.length === 0) {
+      useUiStore.getState().pushToast('Add some pieces before downloading.', 'error')
+      return
+    }
+    try {
+      await downloadArtworkPng(s.pieces, s.title)
+      useUiStore.getState().pushToast('PNG downloaded.', 'success')
+    } catch {
+      useUiStore.getState().pushToast('Could not create the PNG.', 'error')
+    }
+  }
+
   return (
     <div className="rounded-3xl border border-forest/10 bg-white p-3 shadow-sm">
       <div className="flex flex-wrap items-center gap-3">
@@ -136,6 +152,12 @@ export default function EditorToolbar({ onPreview, onPublish, onClear }: EditorT
           />
           <ToolButton icon={Eraser} label="Clear canvas" onClick={onClear} disabled={!hasPieces} />
           <ToolButton icon={Eye} label="Preview" onClick={onPreview} showLabel />
+          <ToolButton
+            icon={Download}
+            label="Download PNG"
+            onClick={() => void handleDownload()}
+            disabled={!hasPieces}
+          />
           <ToolButton icon={Save} label="Save" onClick={handleSave} showLabel tone="primary" />
           <ToolButton icon={Upload} label="Publish" onClick={onPublish} showLabel tone="accent" />
         </div>
