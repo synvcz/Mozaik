@@ -127,6 +127,10 @@ export default function EditorCanvas() {
   const trRef = useRef<Konva.Transformer>(null)
   const nodeRefs = useRef(new Map<string, Konva.Path>())
   const [scale, setScale] = useState(1)
+  // Touch screens need much bigger resize/rotate handles than a mouse.
+  const [coarse] = useState(
+    () => typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches,
+  )
 
   useEffect(() => {
     const el = wrapRef.current
@@ -168,13 +172,13 @@ export default function EditorCanvas() {
   }
 
   const guide = templateId && guideVisible ? getTemplate(templateId)?.guide : undefined
-  const compact = scale < 0.6
 
   return (
     <div ref={wrapRef} className="w-full">
       <div
         ref={hostRef}
-        className="mx-auto overflow-hidden rounded-2xl border border-forest/15 bg-[#FFFDF8] shadow-inner"
+        // touch-none: finger drags move pieces instead of scrolling the page.
+        className="mx-auto touch-none overflow-hidden rounded-2xl border border-forest/15 bg-[#FFFDF8] shadow-inner"
         style={{ width: CANVAS_WIDTH * scale, height: CANVAS_HEIGHT * scale }}
         onDragOver={(e) => {
           e.preventDefault()
@@ -207,8 +211,9 @@ export default function EditorCanvas() {
               keepRatio={false}
               rotationSnaps={[0, 45, 90, 135, 180, -135, -90, -45]}
               rotationSnapTolerance={4}
-              anchorSize={compact ? 16 : 10}
-              anchorCornerRadius={3}
+              anchorSize={coarse ? 26 : 10}
+              rotateAnchorOffset={coarse ? 36 : 50}
+              anchorCornerRadius={coarse ? 8 : 3}
               anchorStroke="#315C48"
               anchorFill="#F8F6F0"
               borderStroke="#315C48"
@@ -223,7 +228,7 @@ export default function EditorCanvas() {
         </Stage>
       </div>
       {pieces.length === 0 && (
-        <p className="mt-3 text-center text-sm text-ink-soft">
+        <p className="mt-3 hidden text-center text-sm text-ink-soft sm:block">
           Your canvas is empty. Pick a fabric on the left to add your first piece.
         </p>
       )}

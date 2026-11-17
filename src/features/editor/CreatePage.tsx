@@ -7,6 +7,7 @@ import ConfirmDialog from '../../components/common/ConfirmDialog'
 import EditorCanvas from '../../components/editor/EditorCanvas'
 import EditorToolbar from '../../components/editor/EditorToolbar'
 import LayersPanel from '../../components/editor/LayersPanel'
+import MobileActionBar from '../../components/editor/MobileActionBar'
 import PiecePalette from '../../components/editor/PiecePalette'
 import PropertiesPanel from '../../components/editor/PropertiesPanel'
 import TemplatePicker from '../../components/editor/TemplatePicker'
@@ -94,7 +95,7 @@ export default function CreatePage() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-[1400px] px-4 py-5 sm:px-6">
+    <div className="mx-auto w-full max-w-[1400px] px-4 pb-24 pt-5 sm:px-6 lg:pb-8">
       <EditorToolbar
         onPreview={handlePreview}
         onPublish={handlePublish}
@@ -102,19 +103,23 @@ export default function CreatePage() {
       />
       <TemplateBanner />
 
-      <div className="mt-4 grid gap-4 lg:grid-cols-[280px_minmax(0,1fr)_300px]">
+      {/* Flex column on phones so the canvas can stay pinned while the panels scroll;
+          three-column grid on large screens. */}
+      <div className="mt-4 flex flex-col gap-4 lg:grid lg:grid-cols-[280px_minmax(0,1fr)_300px]">
+        <div className="sticky top-[76px] z-20 order-1 -mx-4 bg-ivory px-4 pb-2 pt-1 shadow-[0_10px_10px_-10px_rgba(43,42,38,0.25)] sm:-mx-6 sm:px-6 lg:static lg:z-auto lg:order-2 lg:mx-0 lg:bg-transparent lg:p-0 lg:shadow-none">
+          <EditorCanvas />
+        </div>
         <div className="order-2 space-y-4 lg:order-1">
           <PiecePalette />
           <TemplatePicker />
-        </div>
-        <div className="order-1 lg:order-2">
-          <EditorCanvas />
         </div>
         <div className="order-3 space-y-4">
           <PropertiesPanel />
           <LayersPanel />
         </div>
       </div>
+
+      <MobileActionBar />
 
       {preview && <ArtworkPreviewDialog artwork={preview} onClose={() => setPreview(null)} />}
       {publishDraft && <PublishDialog draft={publishDraft} onClose={() => setPublishDraft(null)} />}

@@ -169,3 +169,18 @@
     transform: none;
   }
 }
+
+/* ---------- Mobile ---------- */
+a,
+button,
+[role="button"] {
+  -webkit-tap-highlight-color: transparent;
+}
+
+@media (max-width: 767px) {
+  input:not([type="range"]),
+  textarea,
+  select {
+    font-size: 16px;
+  }
+}
