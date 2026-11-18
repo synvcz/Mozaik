@@ -1,9 +1,10 @@
 import type { FabricPiece } from '../types/editor'
 import { PATTERNS } from './patterns'
 import { CANVAS_HEIGHT, CANVAS_WIDTH, clamp, MAX_SIZE, MIN_SIZE, SHAPES } from './shapes'
+import { hasSlot } from './slots'
 
 const COLOR = /^#[0-9a-fA-F]{6}$/
-const SHAPE_IDS: string[] = SHAPES.map((s) => s.id)
+const SHAPE_IDS: string[] = [...SHAPES.map((s) => s.id), 'slot']
 const PATTERN_IDS: string[] = PATTERNS.map((p) => p.id)
 
 const isNum = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v)
@@ -21,6 +22,7 @@ export function sanitizePieces(input: unknown): FabricPiece[] {
     if (typeof p.pattern !== 'string' || !PATTERN_IDS.includes(p.pattern)) continue
     if (typeof p.color !== 'string' || !COLOR.test(p.color)) continue
     if (!isNum(p.x) || !isNum(p.y) || !isNum(p.width) || !isNum(p.height) || !isNum(p.rotation)) continue
+    if (p.shape === 'slot' && !(typeof p.slotRef === 'string' && hasSlot(p.slotRef))) continue
 
     out.push({
       id: `p${out.length}`,
@@ -32,6 +34,7 @@ export function sanitizePieces(input: unknown): FabricPiece[] {
       width: clamp(p.width, MIN_SIZE, MAX_SIZE),
       height: clamp(p.height, MIN_SIZE, MAX_SIZE),
       rotation: clamp(p.rotation, -360, 360),
+      ...(p.shape === 'slot' ? { slotRef: p.slotRef as string } : {}),
     })
   }
   return out
