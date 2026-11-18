@@ -46,7 +46,7 @@ export default function ArtworkThumbnail({ pieces, className = '', label }: Artw
       {pieces.map((p) => (
         <path
           key={p.id}
-          d={shapePath(p.shape, p.width, p.height)}
+          d={shapePath(p.shape, p.width, p.height, p.slotRef)}
           transform={pieceTransform(p)}
           fill={p.pattern === 'plain' ? p.color : `url(#${uid}-${patternKey(p)})`}
           stroke="rgba(43,42,38,0.22)"
