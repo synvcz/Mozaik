@@ -87,7 +87,7 @@ export default function PropertiesPanel() {
                 title={s.label}
                 aria-label={s.label}
                 aria-pressed={piece.shape === s.id}
-                onClick={() => set({ shape: s.id })}
+                onClick={() => set({ shape: s.id, slotRef: undefined })}
                 className={`grid h-10 place-items-center rounded-xl transition ${
                   piece.shape === s.id ? 'bg-forest text-ivory' : 'bg-ivory-deep text-forest hover:bg-sage/30'
                 }`}
