@@ -1,15 +1,18 @@
 import type { FabricPattern, FabricPiece, PieceShape } from '../types/editor'
+import { transformPath } from './pathTools'
+import { getSlotUnitPath } from './slots'
 
 export const CANVAS_WIDTH = 800
 export const CANVAS_HEIGHT = 600
 export const MIN_SIZE = 24
 export const MAX_SIZE = 800
+export const GUIDE_SCALE = 5.6
 
 const n = (v: number) => Math.round(v * 100) / 100
 const K = 0.5523
 
 /** SVG path for a shape inside a 0..w by 0..h box. Shared by Konva (editor) and SVG (thumbnails). */
-export function shapePath(shape: PieceShape, w: number, h: number): string {
+export function shapePath(shape: PieceShape, w: number, h: number, slotRef?: string): string {
   const rx = w / 2
   const ry = h / 2
   switch (shape) {
@@ -30,6 +33,12 @@ export function shapePath(shape: PieceShape, w: number, h: number): string {
       return `M${n(rx)} 0L${n(w)} ${n(h)}L0 ${n(h)}Z`
     case 'diamond':
       return `M${n(rx)} 0L${n(w)} ${n(ry)}L${n(rx)} ${n(h)}L0 ${n(ry)}Z`
+    case 'slot': {
+      const unit = slotRef ? getSlotUnitPath(slotRef) : undefined
+      return unit
+        ? transformPath(unit, (x) => x * w, (y) => y * h)
+        : `M0 0H${n(w)}V${n(h)}H0Z`
+    }
   }
 }
 
@@ -48,6 +57,7 @@ export const SHAPES: { id: PieceShape; label: string; width: number; height: num
 ]
 
 export function shapeLabel(id: PieceShape): string {
+  if (id === 'slot') return 'Outline piece'
   return SHAPES.find((s) => s.id === id)?.label ?? id
 }
 
