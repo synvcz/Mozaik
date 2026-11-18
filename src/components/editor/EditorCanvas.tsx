@@ -7,25 +7,43 @@ import {
   CANVAS_HEIGHT,
   CANVAS_WIDTH,
   clamp,
+  GUIDE_SCALE,
   MAX_SIZE,
   MIN_SIZE,
   normalizeRotation,
   shapePath,
+  SHAPES,
 } from '../../lib/shapes'
+import { findSnapTarget } from '../../lib/snap'
 import { useEditorStore } from '../../store/editorStore'
-import type { FabricPattern, FabricPiece, GuideShape } from '../../types/editor'
+import type { FabricPattern, FabricPiece, GuideShape, TemplateId } from '../../types/editor'
 
-const GUIDE_SCALE = 5.6
 const GUIDE_STROKE = '#C77D55'
+const GUIDE_ACTIVE = '#A9613B'
 
 interface PieceNodeProps {
   piece: FabricPiece
   onSelect: (id: string) => void
   onChange: (id: string, patch: Partial<FabricPiece>) => void
+  onDragMove: (x: number, y: number, width: number, height: number) => void
+  onDragFinish: (
+    id: string,
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+  ) => Partial<FabricPiece>
   registerNode: (id: string, node: Konva.Path | null) => void
 }
 
-const PieceNode = memo(function PieceNode({ piece, onSelect, onChange, registerNode }: PieceNodeProps) {
+const PieceNode = memo(function PieceNode({
+  piece,
+  onSelect,
+  onChange,
+  onDragMove,
+  onDragFinish,
+  registerNode,
+}: PieceNodeProps) {
   const tile = piece.pattern === 'plain' ? null : getPatternTile(piece.pattern, piece.color)
 
   return (
@@ -36,7 +54,7 @@ const PieceNode = memo(function PieceNode({ piece, onSelect, onChange, registerN
       offsetX={piece.width / 2}
       offsetY={piece.height / 2}
       rotation={piece.rotation}
-      data={shapePath(piece.shape, piece.width, piece.height)}
+      data={shapePath(piece.shape, piece.width, piece.height, piece.slotRef)}
       fill={tile ? undefined : piece.color}
       fillPriority={tile ? 'pattern' : 'color'}
       fillPatternImage={tile ? asPatternImage(tile.canvas) : undefined}
@@ -50,11 +68,14 @@ const PieceNode = memo(function PieceNode({ piece, onSelect, onChange, registerN
       onMouseDown={() => onSelect(piece.id)}
       onTouchStart={() => onSelect(piece.id)}
       onDragStart={() => onSelect(piece.id)}
+      onDragMove={(e) => onDragMove(e.target.x(), e.target.y(), piece.width, piece.height)}
       onDragEnd={(e) => {
         const x = clamp(Math.round(e.target.x()), 0, CANVAS_WIDTH)
         const y = clamp(Math.round(e.target.y()), 0, CANVAS_HEIGHT)
-        e.target.position({ x, y })
-        onChange(piece.id, { x, y })
+        const patch = onDragFinish(piece.id, x, y, piece.width, piece.height)
+        // Set the node position directly: if a snap lands on the same values as before,
+        // React sees no change and would leave the node where it was dropped.
+        e.target.position({ x: patch.x ?? x, y: patch.y ?? y })
       }}
       onTransformEnd={(e) => {
         const node = e.target
@@ -74,18 +95,32 @@ const PieceNode = memo(function PieceNode({ piece, onSelect, onChange, registerN
   )
 })
 
-function GuideLayer({ guide }: { guide: GuideShape[] }) {
+interface GuideLayerProps {
+  guide: GuideShape[]
+  templateId: TemplateId
+  highlight: string | null
+}
+
+function GuideLayer({ guide, templateId, highlight }: GuideLayerProps) {
   return (
     <Group
       x={CANVAS_WIDTH / 2}
       y={CANVAS_HEIGHT / 2}
       scaleX={GUIDE_SCALE}
       scaleY={GUIDE_SCALE}
-      opacity={0.6}
+      opacity={0.75}
       listening={false}
     >
-      {guide.map((g, i) =>
-        g.kind === 'ellipse' ? (
+      {guide.map((g, i) => {
+        const active = highlight === `${templateId}:${i}`
+        const style = {
+          stroke: active ? GUIDE_ACTIVE : GUIDE_STROKE,
+          strokeWidth: active ? 2.6 : 1.4,
+          strokeScaleEnabled: false,
+          dash: active ? undefined : [7, 6],
+          fill: active ? 'rgba(199,125,85,0.3)' : undefined,
+        }
+        return g.kind === 'ellipse' ? (
           <Ellipse
             key={i}
             x={g.cx}
@@ -93,24 +128,19 @@ function GuideLayer({ guide }: { guide: GuideShape[] }) {
             radiusX={g.rx}
             radiusY={g.ry}
             rotation={g.rotation}
-            stroke={GUIDE_STROKE}
-            strokeWidth={1.4}
-            strokeScaleEnabled={false}
-            dash={[7, 6]}
+            {...style}
           />
         ) : (
-          <Path
-            key={i}
-            data={g.d}
-            stroke={GUIDE_STROKE}
-            strokeWidth={1.4}
-            strokeScaleEnabled={false}
-            dash={[7, 6]}
-          />
-        ),
-      )}
+          <Path key={i} data={g.d} {...style} />
+        )
+      })}
     </Group>
   )
+}
+
+function brushSize() {
+  const brush = useEditorStore.getState().brushShape
+  return SHAPES.find((s) => s.id === brush) ?? SHAPES[0]
 }
 
 export default function EditorCanvas() {
@@ -118,6 +148,7 @@ export default function EditorCanvas() {
   const selectedId = useEditorStore((s) => s.selectedId)
   const templateId = useEditorStore((s) => s.templateId)
   const guideVisible = useEditorStore((s) => s.guideVisible)
+  const snapEnabled = useEditorStore((s) => s.snapEnabled)
   const select = useEditorStore((s) => s.select)
   const updatePiece = useEditorStore((s) => s.updatePiece)
   const addPiece = useEditorStore((s) => s.addPiece)
@@ -127,10 +158,13 @@ export default function EditorCanvas() {
   const trRef = useRef<Konva.Transformer>(null)
   const nodeRefs = useRef(new Map<string, Konva.Path>())
   const [scale, setScale] = useState(1)
+  const [hover, setHover] = useState<string | null>(null)
   // Touch screens need much bigger resize/rotate handles than a mouse.
   const [coarse] = useState(
     () => typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches,
   )
+
+  const snapActive = Boolean(templateId && guideVisible && snapEnabled)
 
   useEffect(() => {
     const el = wrapRef.current
@@ -155,20 +189,53 @@ export default function EditorCanvas() {
     tr.getLayer()?.batchDraw()
   }, [selectedId, pieces])
 
+  const probe = useCallback(
+    (x: number, y: number, width: number, height: number) =>
+      snapActive ? findSnapTarget(templateId, { x, y, width, height }) : null,
+    [snapActive, templateId],
+  )
+
+  const handleDragMove = useCallback(
+    (x: number, y: number, width: number, height: number) => {
+      setHover(probe(x, y, width, height)?.ref ?? null)
+    },
+    [probe],
+  )
+
+  const handleDragFinish = useCallback(
+    (id: string, x: number, y: number, width: number, height: number): Partial<FabricPiece> => {
+      const target = probe(x, y, width, height)
+      const patch: Partial<FabricPiece> = target ? target.patch : { x, y }
+      setHover(null)
+      updatePiece(id, patch)
+      return patch
+    },
+    [probe, updatePiece],
+  )
+
+  const toCanvasPoint = (clientX: number, clientY: number) => {
+    const rect = hostRef.current?.getBoundingClientRect()
+    if (!rect) return null
+    return {
+      x: clamp(Math.round((clientX - rect.left) / scale), 0, CANVAS_WIDTH),
+      y: clamp(Math.round((clientY - rect.top) / scale), 0, CANVAS_HEIGHT),
+    }
+  }
+
   const handleStagePointer = (e: Konva.KonvaEventObject<MouseEvent | TouchEvent>) => {
     if (e.target === e.target.getStage() || e.target.name() === 'bg') select(null)
   }
 
   const handleDrop = (e: DragEvent<HTMLDivElement>) => {
     e.preventDefault()
+    setHover(null)
     const raw = e.dataTransfer.getData('application/x-mozaik-pattern')
     if (!PATTERNS.some((p) => p.id === raw)) return
-    const rect = hostRef.current?.getBoundingClientRect()
-    if (!rect) return
-    addPiece(raw as FabricPattern, {
-      x: clamp(Math.round((e.clientX - rect.left) / scale), 0, CANVAS_WIDTH),
-      y: clamp(Math.round((e.clientY - rect.top) / scale), 0, CANVAS_HEIGHT),
-    })
+    const point = toCanvasPoint(e.clientX, e.clientY)
+    if (!point) return
+    const def = brushSize()
+    const target = probe(point.x, point.y, def.width, def.height)
+    addPiece(raw as FabricPattern, point, target?.patch)
   }
 
   const guide = templateId && guideVisible ? getTemplate(templateId)?.guide : undefined
@@ -183,6 +250,14 @@ export default function EditorCanvas() {
         onDragOver={(e) => {
           e.preventDefault()
           e.dataTransfer.dropEffect = 'copy'
+          if (!snapActive) return
+          const point = toCanvasPoint(e.clientX, e.clientY)
+          if (!point) return
+          const def = brushSize()
+          setHover(probe(point.x, point.y, def.width, def.height)?.ref ?? null)
+        }}
+        onDragLeave={(e) => {
+          if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setHover(null)
         }}
         onDrop={handleDrop}
       >
@@ -196,13 +271,21 @@ export default function EditorCanvas() {
         >
           <Layer>
             <Rect name="bg" width={CANVAS_WIDTH} height={CANVAS_HEIGHT} fill="#FFFDF8" />
-            {guide && <GuideLayer guide={guide} />}
+            {guide && templateId && (
+              <GuideLayer
+                guide={guide}
+                templateId={templateId}
+                highlight={snapActive ? hover : null}
+              />
+            )}
             {pieces.map((piece) => (
               <PieceNode
                 key={piece.id}
                 piece={piece}
                 onSelect={select}
                 onChange={updatePiece}
+                onDragMove={handleDragMove}
+                onDragFinish={handleDragFinish}
                 registerNode={registerNode}
               />
             ))}
