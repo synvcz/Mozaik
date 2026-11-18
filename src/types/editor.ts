@@ -1,7 +1,7 @@
 import type { ChallengeId } from './challenge'
 
 export type FabricPattern = 'batik' | 'kawung' | 'parang' | 'floral' | 'polka' | 'plain'
-export type PieceShape = 'rect' | 'circle' | 'petal' | 'leaf' | 'triangle' | 'diamond'
+export type PieceShape = 'rect' | 'circle' | 'petal' | 'leaf' | 'triangle' | 'diamond' | 'slot'
 
 export interface FabricPiece {
   id: string
@@ -14,6 +14,7 @@ export interface FabricPiece {
   width: number
   height: number
   rotation: number
+  slotRef?: string
 }
 
 export type IconTemplateId = 'gunungan' | 'rumah-gadang' | 'borobudur' | 'tumpeng'
