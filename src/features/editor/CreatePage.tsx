@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Eye, EyeOff, X } from 'lucide-react'
+import { Eye, EyeOff, Magnet, X } from 'lucide-react'
 import ArtworkPreviewDialog, { type PreviewableArtwork } from '../../components/artwork/ArtworkPreviewDialog'
 import PublishDialog, { type PublishDraft } from '../../components/artwork/PublishDialog'
 import ActionButton from '../../components/common/ActionButton'
@@ -19,7 +19,9 @@ import { useUiStore } from '../../store/uiStore'
 function TemplateBanner() {
   const templateId = useEditorStore((s) => s.templateId)
   const guideVisible = useEditorStore((s) => s.guideVisible)
+  const snapEnabled = useEditorStore((s) => s.snapEnabled)
   const toggleGuide = useEditorStore((s) => s.toggleGuide)
+  const toggleSnap = useEditorStore((s) => s.toggleSnap)
   const setTemplate = useEditorStore((s) => s.setTemplate)
   const template = getTemplate(templateId)
   if (!template) return null
@@ -32,7 +34,16 @@ function TemplateBanner() {
         </p>
         <p className="font-display text-xl font-semibold text-forest">{template.name}</p>
         <p className="text-sm text-ink-soft">{template.objective}</p>
+        {snapEnabled && guideVisible && (
+          <p className="mt-1 text-sm font-medium text-forest">
+            Drag a piece onto the outline. It snaps to that part and takes its exact shape.
+          </p>
+        )}
       </div>
+      <ActionButton onClick={toggleSnap} aria-pressed={snapEnabled}>
+        <Magnet size={16} aria-hidden="true" />
+        Snap: {snapEnabled ? 'On' : 'Off'}
+      </ActionButton>
       <ActionButton onClick={toggleGuide}>
         {guideVisible ? <EyeOff size={16} aria-hidden="true" /> : <Eye size={16} aria-hidden="true" />}
         {guideVisible ? 'Hide outline' : 'Show outline'}
