@@ -27,9 +27,16 @@ interface DraftState {
 interface EditorState extends DraftState {
   brushColor: string
   brushShape: PieceShape
+  /** When on, pieces dropped near a template outline snap into that outline part. */
+  snapEnabled: boolean
 
   select: (id: string | null) => void
-  addPiece: (pattern: FabricPattern, at?: { x: number; y: number }) => void
+  /** `overrides` lets the canvas place a piece with a snapped position, size, rotation and shape. */
+  addPiece: (
+    pattern: FabricPattern,
+    at?: { x: number; y: number },
+    overrides?: Partial<FabricPiece>,
+  ) => void
   /** Pass a coalesceKey for slider-style edits so rapid changes become one undo step. */
   updatePiece: (id: string, patch: Partial<FabricPiece>, coalesceKey?: string) => void
   removePiece: (id: string) => void
@@ -45,6 +52,7 @@ interface EditorState extends DraftState {
   setBrushShape: (shape: PieceShape) => void
   setTemplate: (id: TemplateId | null) => void
   toggleGuide: () => void
+  toggleSnap: () => void
   markSaved: (createdAt: number) => void
 
   startFromTemplate: (id: TemplateId | null) => void
@@ -100,10 +108,11 @@ export const useEditorStore = create<EditorState>((set) => ({
   ...blankDraft(),
   brushColor: '#C77D55',
   brushShape: 'petal',
+  snapEnabled: true,
 
   select: (id) => set({ selectedId: id }),
 
-  addPiece: (pattern, at) =>
+  addPiece: (pattern, at, overrides) =>
     set((s) => {
       const def = SHAPES.find((sh) => sh.id === s.brushShape) ?? SHAPES[0]
       const offset = (s.pieces.length % 6) * 18
@@ -117,6 +126,7 @@ export const useEditorStore = create<EditorState>((set) => ({
         width: def.width,
         height: def.height,
         rotation: 0,
+        ...overrides,
       }
       return { ...withHistory(s, [...s.pieces, piece]), selectedId: piece.id }
     }),
@@ -189,6 +199,7 @@ export const useEditorStore = create<EditorState>((set) => ({
   setBrushShape: (brushShape) => set({ brushShape }),
   setTemplate: (templateId) => set({ templateId, guideVisible: true }),
   toggleGuide: () => set((s) => ({ guideVisible: !s.guideVisible })),
+  toggleSnap: () => set((s) => ({ snapEnabled: !s.snapEnabled })),
   markSaved: (createdAt) => set({ createdAt }),
 
   startFromTemplate: (id) =>
