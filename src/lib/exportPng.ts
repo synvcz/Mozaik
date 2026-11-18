@@ -20,7 +20,7 @@ export function renderArtworkToCanvas(pieces: FabricPiece[], scale = 2): HTMLCan
     ctx.rotate((p.rotation * Math.PI) / 180)
     ctx.translate(-p.width / 2, -p.height / 2)
 
-    const path = new Path2D(shapePath(p.shape, p.width, p.height))
+    const path = new Path2D(shapePath(p.shape, p.width, p.height, p.slotRef))
 
     ctx.fillStyle = p.color
     if (p.pattern !== 'plain') {
